@@ -27,12 +27,16 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(cors());
 
+// Static Files
+app.use(express.static(path.join(__dirname, "../../dist/")));
+
 // Routes
 app.use("/api/notes", require(path.join(__dirname, "routes", "notesRouter")));
 app.use("/auth", require(path.join(__dirname, "routes", "userRouter")));
 
-// Static Files
-app.use(express.static(path.join(__dirname, "../../dist/")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../../dist/index.html"));
+});
 
 // Starting the server
 app.listen(app.get("port"), () => {
