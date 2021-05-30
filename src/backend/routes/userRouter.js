@@ -85,6 +85,7 @@ router.post("/register", async (req, res) => {
 router.post("/pending", async (req, res) => {
   try {
     await User.findOneAndUpdate({ _id: req.body.id }, { pending: false });
+    res.json(true);
 
     // Handle Errors
   } catch (err) {
