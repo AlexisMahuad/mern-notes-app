@@ -2,11 +2,20 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const auth = require("../middleware/auth");
+
 // Models
 const User = require("../models/userModel");
+const contentHTML = require("../models/mailModel");
 
+// Mail transporter
+const transporter = require("../middleware/mailer");
+
+// Router
+// *****************************
 const router = express.Router();
 
+// Register
+// ********
 router.post("/register", async (req, res) => {
   try {
     const { email, username, password, confirmPassword } = req.body;
@@ -25,14 +34,13 @@ router.post("/register", async (req, res) => {
 
     // Checkign if the user already exists.
     const userExists = await User.findOne({ email });
-    console.log("User exists: ", userExists);
+
     if (userExists) {
       return res.json({
         errorMessage: "Ya existe una cuenta con ese email",
       });
     }
     const emailExists = await User.findOne({ username });
-    console.log("Email exists: ", emailExists);
     if (emailExists) {
       return res.json({
         errorMessage: "Ya existe una cuenta con ese nombre de usuario.",
@@ -48,18 +56,23 @@ router.post("/register", async (req, res) => {
       email,
       username,
       passwordHash,
+      pending: true,
     });
     await newUser.save();
 
-    // Log in.
-    const token = jwt.sign(
-      {
-        user: newUser._id,
-      },
-      process.env.JWT_SECRET
-    );
+    try {
+      await transporter.sendMail({
+        from: '"NodemailerApp', // sender address
+        to: email, // list of receivers
+        subject: "Email Verification", // Subject line
+        html: contentHTML(newUser._id), // html body
+      });
+    } catch (err) {
+      console.error(err);
+    }
 
-    res.json({ token, username });
+    res.json({ status: true });
+
     // Handle Errors
   } catch (err) {
     console.error(err);
@@ -67,6 +80,20 @@ router.post("/register", async (req, res) => {
   }
 });
 
+// Pending
+// *******
+router.post("/pending", async (req, res) => {
+  try {
+    await User.findOneAndUpdate({ _id: req.body.id }, { pending: false });
+
+    // Handle Errors
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+// Login
+// *****
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -78,6 +105,10 @@ router.post("/login", async (req, res) => {
 
     // Checking if the email exists
     const existingUser = await User.findOne({ email });
+
+    if (existingUser.pending) {
+      return res.json({ errorMessage: "Esta cuenta no está verificada" });
+    }
 
     if (!existingUser) {
       return res.json({ errorMessage: "Mail o contraseña erroneos" });
@@ -110,6 +141,8 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// TokenIsValid
+// ************
 router.post("/tokenIsValid", async (req, res) => {
   try {
     const token = req.header("x-auth-token");
@@ -122,11 +155,15 @@ router.post("/tokenIsValid", async (req, res) => {
     if (!user) return res.json(false);
 
     return res.json(true);
+
+    //
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+// Auth
+// ****
 router.get("/", auth, async (req, res) => {
   const token = req.header("x-auth-token");
   const id = jwt.verify(token, process.env.JWT_SECRET).user;

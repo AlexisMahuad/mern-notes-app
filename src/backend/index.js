@@ -20,17 +20,21 @@ mongoose
   });
 
 // Global variables
+// ****************
 app.set("port", process.env.PORT || 4000);
 
 // Middlewares
+// ***********
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(cors());
 
 // Static Files
+// ************
 app.use(express.static(path.join(__dirname, "../../dist/")));
 
 // Routes
+// ******
 app.use("/api/notes", require(path.join(__dirname, "routes", "notesRouter")));
 app.use("/auth", require(path.join(__dirname, "routes", "userRouter")));
 

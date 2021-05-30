@@ -1,6 +1,11 @@
 import React from "react";
+import "./note.css";
+
 // Contexts
-import { useNotesContext } from "../contexts/notesContext";
+import { useNotesContext } from "../../contexts/notesContext";
+
+// Components
+import Button from "../Button/Button";
 
 import moment from "moment";
 moment.updateLocale("en", {
@@ -25,16 +30,19 @@ moment.updateLocale("en", {
 });
 
 function Note(props) {
-  const { id, title, text, color, author, date, isPublic } = props.content;
+  const {
+    _id: id,
+    title,
+    text,
+    color,
+    author,
+    date,
+    public: isPublic,
+  } = props.content;
 
   // Context
-  const {
-    pickNoteColor,
-    setForm,
-    setIsEditing,
-    setAlert,
-    handleDelete,
-  } = useNotesContext();
+  const { pickNoteColor, setForm, setIsEditing, setAlert, handleDelete } =
+    useNotesContext();
 
   return (
     <li className={`note ${pickNoteColor(color)}`}>
@@ -52,19 +60,16 @@ function Note(props) {
         {!props.public && (
           <div>
             <>
-              <button className="button" onClick={() => handleDelete(id)}>
-                Borrar
-              </button>
-              <button
-                className="button"
-                onClick={() => {
+              <Button text="Borrar" action={() => handleDelete(id)} />
+
+              <Button
+                text="Editar"
+                action={() => {
                   setAlert({ type: null, message: "" });
                   setForm({ title, text, color, public: isPublic });
                   setIsEditing([true, id]);
                 }}
-              >
-                Editar
-              </button>
+              />
             </>
           </div>
         )}

@@ -1,0 +1,29 @@
+.alert {
+  margin-bottom: 10px;
+  padding: 2px 10px;
+  display: flex;
+  justify-content: space-between;
+
+  background: #f00;
+  border-radius: 3px;
+  color: #fff;
+  font-size: 0.85em;
+  line-height: 30px;
+}
+.alert button,
+.form-header button {
+  padding-right: 5px;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: #fff;
+}
+
+/* Alert Colors */
+/* ************ */
+.success {
+  background: #00dd00;
+}
+.edit {
+  background: #0af;
+}

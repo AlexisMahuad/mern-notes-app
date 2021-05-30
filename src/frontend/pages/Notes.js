@@ -1,14 +1,21 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useHistory, withRouter } from "react-router-dom";
+import Axios from "axios";
+
 // Contexts
 import { useNotesContext } from "../contexts/notesContext";
 import { useUserContext } from "../contexts/userContext";
+
 // Components
-import Note from "../components/Note";
-import Axios from "axios";
+import Note from "../components/Note/Note";
+import Button from "../components/Button/Button";
+import Alert from "../components/Alert/Alert";
+import Loader from "../components/Loader";
+
+// Hooks
+import useNearScreen from "../hooks/useNearScreen";
 
 function Notes() {
-  // Context
   const { userData, setUserData } = useUserContext();
   const {
     notes,
@@ -22,25 +29,59 @@ function Notes() {
     pickNoteColor,
     handleChangeNoteColor,
     handleSubmit,
+    bottomReached,
+    setBottomReached,
+    loading,
+    setLoading,
+    from,
+    setFrom,
   } = useNotesContext();
-
-  // history
   const history = useHistory();
 
+  // Get Notes
+  // *********
   const getNotes = async (username) => {
-    const res = await Axios.get("/api/notes", {
-      headers: {
-        username,
-      },
-    });
-    // const res = await Axios.get("http://localhost:4000/api/notes", {
-    //   headers: {
-    //     username,
-    //   },
-    // });
-    setNotes(res.data);
+    const fetchedNotes = (
+      await Axios.get("/api/notes", {
+        headers: {
+          username,
+          from,
+        },
+      })
+    ).data;
+
+    if (!notes) {
+      setNotes(fetchedNotes);
+    } else {
+      setNotes(notes.concat(fetchedNotes));
+    }
+
+    if (fetchedNotes.length < 8) {
+      setBottomReached(true);
+    }
+
+    setFrom(from + fetchedNotes.length);
+    setLoading(false);
   };
 
+  // Infinite Scroll
+  // ***************
+  const externalRef = useRef();
+  const { isNearScreen } = useNearScreen({
+    distance: "100px",
+    externalRef: loading ? null : externalRef,
+    once: false,
+  });
+
+  useEffect(() => {
+    if (!bottomReached && isNearScreen) {
+      setLoading(true);
+      getNotes(userData.username);
+    }
+  }, [isNearScreen]);
+
+  // Check if the user is already logged
+  // ***********************************
   useEffect(async () => {
     const sessionToken = sessionStorage.getItem("auth-token");
 
@@ -48,23 +89,11 @@ function Notes() {
       history.push("/");
     } else {
       if (!userData.token || !userData.username) {
-        // const tokenRes = await Axios.post(
-        //   "http://localhost:4000/auth/tokenIsValid",
-        //   null,
-        //   {
-        //     headers: { "x-auth-token": sessionToken },
-        //   }
-        // );
         const tokenRes = await Axios.post("/auth/tokenIsValid", null, {
           headers: { "x-auth-token": sessionToken },
         });
 
         if (tokenRes.data) {
-          // const userRes = await Axios.get("http://localhost:4000/auth/", {
-          //   headers: {
-          //     "x-auth-token": sessionToken,
-          //   },
-          // });
           const userRes = await Axios.get("/auth/", {
             headers: {
               "x-auth-token": sessionToken,
@@ -75,27 +104,27 @@ function Notes() {
             token: userRes.data.token,
             username: userRes.data.username,
           });
-          return getNotes(userRes.data.username);
 
+          if (!bottomReached) getNotes(userRes.data.username);
+          return;
           // If the token is invalid
         } else {
           sessionStorage.setItem("auth-token", "");
           return history.push("/");
         }
       }
-      getNotes(userData.username);
+      if (!bottomReached) {
+        getNotes(userData.username);
+      }
     }
   }, []);
 
+  //
   return (
     <>
       <section className="form-section">
         <div className="form-section-container">
-          <form
-            action="/"
-            method="POST"
-            className={`note notes-form ${pickNoteColor()}`}
-          >
+          <form className={`note notes-form ${pickNoteColor()}`}>
             {/* If is editing */}
             {isEditing[0] && (
               <div className="form-header">
@@ -104,9 +133,14 @@ function Notes() {
                   <span onClick={() => handleChangeNoteColor()}>👇</span>
                 </h2>
                 <button
-                  onClick={(e) => {
-                    setForm({ title: "", author: "", text: "" });
-                    setIsEditing([false, null]);
+                  onClick={() => {
+                    setForm({
+                      title: "",
+                      text: "",
+                      color: "yellow",
+                      public: false,
+                    });
+                    setIsEditing([false, ""]);
                   }}
                 >
                   X
@@ -122,16 +156,11 @@ function Notes() {
             )}
 
             {/* Show alerts */}
-            {alert.message && (
-              <>
-                <h4 className={`alert ${alert.type}`}>
-                  {alert.message}
-                  <button onClick={() => setAlert({ type: null, message: "" })}>
-                    X
-                  </button>
-                </h4>
-              </>
-            )}
+            <Alert
+              type={alert.type}
+              msg={alert.message}
+              action={() => setAlert({ type: null, message: "" })}
+            />
 
             {/* Inputs */}
             <input
@@ -142,7 +171,6 @@ function Notes() {
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="Inserta un título"
             />
-            <hr />
             <div className="form-control">
               <textarea
                 maxLength="120"
@@ -163,23 +191,22 @@ function Notes() {
             </div>
 
             {/* Submit form */}
-            <button
-              className="button"
-              type="submit"
-              onClick={(e) => handleSubmit(e)}
-            >
-              {!isEditing[0] && "Crear"}
-              {isEditing[0] && "Editar"}
-            </button>
+            <Button
+              text={!isEditing[0] ? "Crear" : "Editar"}
+              action={() => {
+                handleSubmit(form, userData.username);
+              }}
+            />
           </form>
-          {/* Seccion de informacion */}
+
+          {/* Info section */}
           <div className="notes-info">
             <h2>Organiza tus ideas con simples notas de colores</h2>
             <ul>
               <li>
                 Si habilitas la opcion de "público" en la nota todo el mundo
                 podrá encontrarla en la{" "}
-                <Link to="/public">sección de notas públicas</Link>
+                <Link to="/">sección de notas públicas</Link>
               </li>
               <li>
                 Elige el color que más te guste clickeando el icono "👇" que se
@@ -190,33 +217,43 @@ function Notes() {
         </div>
       </section>
 
-      {/* Notas del usuario */}
+      {/* User Notes */}
       <section className="notes-section" style={{ background: "#f7f7f7" }}>
         <h2>Mis Notas</h2>
-        <ul>
-          {notes === null || notes.length === 0 ? (
-            <h3>No tienes ninguna nota en este momento, crea una! :D</h3>
-          ) : (
-            notes.map((note) => {
-              const { _id, title, text, color, date } = note;
 
-              return (
-                <Note
-                  key={_id}
-                  content={{
-                    id: _id,
-                    title,
-                    text,
-                    color,
-                    date,
-                    isPublic: note.public,
-                  }}
-                  public={false}
-                />
-              );
-            })
-          )}
+        {/* If there aren't notes */}
+        {(!notes || notes.length === 0) && (
+          <h2
+            style={{ maxWidth: "300px", fontSize: "1.25rem", margin: "auto" }}
+          >
+            No tienes ninguna nota en este momento, crea una! :D
+          </h2>
+        )}
+
+        <ul>
+          {/* If there are notes */}
+          {notes &&
+            notes.map((note) => (
+              <Note
+                key={note._id}
+                public={false}
+                content={{
+                  ...note,
+                }}
+              />
+            ))}
         </ul>
+
+        {/* Bottom Reached Message */}
+        {bottomReached && notes.length != 0 && (
+          <h2 style={{ marginTop: "40px" }}>Has llegado al final</h2>
+        )}
+
+        {/* Loader */}
+        {loading && <Loader />}
+
+        {/* End reference (infinite scroll)*/}
+        <div ref={externalRef}></div>
       </section>
     </>
   );

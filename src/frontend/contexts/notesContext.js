@@ -1,40 +1,44 @@
 import React, { useState, useContext } from "react";
-import { useUserContext } from "./userContext";
 import Axios from "axios";
 
+// Contexts
 const notesContext = React.createContext();
 
 function NotesProvider({ children }) {
-  const { userData, setUserData } = useUserContext();
-  const [notes, setNotes] = useState(null);
   const [form, setForm] = useState({
     title: "",
     text: "",
     color: "yellow",
     public: false,
   });
-  const [isEditing, setIsEditing] = useState([false, null]);
+
+  // Load Notes
+  const [notes, setNotes] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [from, setFrom] = useState(0);
+  const [bottomReached, setBottomReached] = useState(false);
+
+  // Load Public Notes
+  const [publicNotes, setPublicNotes] = useState(null);
+  const [pLoading, setPLoading] = useState(true);
+  const [pFrom, setPFrom] = useState(0);
+  const [pBottomReached, setPBottomReached] = useState(false);
+
+  const [isEditing, setIsEditing] = useState([false, ""]);
   const [alert, setAlert] = useState({
     type: null,
     message: null,
   });
 
-  // *************
   // Handle Submit
   // *************
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (noteForm, author) => {
+    noteForm = { ...noteForm, author };
 
+    // Edit Note
+    // *********
     if (isEditing[0]) {
-      // const res = await Axios.put(
-      //   `http://localhost:4000/api/notes/${isEditing[1]}`,
-      //   { ...form, author: userData.username }
-      // );
-      const res = await Axios.put(`/api/notes/${isEditing[1]}`, {
-        ...form,
-        author: userData.username,
-      });
-
+      const res = await Axios.put(`/api/notes/${isEditing[1]}`, noteForm);
       // Create a new note list replacing the edited note
       const newNoteList = notes.map((note, index) => {
         if (note._id === res.data.id) {
@@ -44,7 +48,6 @@ function NotesProvider({ children }) {
         }
         return note;
       });
-
       // Set an alert
       setAlert({ type: "edit", message: res.data.message });
       // Reset the state
@@ -52,33 +55,23 @@ function NotesProvider({ children }) {
       setForm({ title: "", text: "", color: "yellow", public: false });
       setIsEditing([false, null]);
 
-      // If isn't editing
-      // ================
+      // Create Note
+      // ***********
     } else {
-      // const res = await Axios.post("http://localhost:4000/api/notes", {
-      //   ...form,
-      //   author: userData.username,
-      // });
-      const res = await Axios.post("/api/notes", {
-        ...form,
-        author: userData.username,
-      });
+      const res = await Axios.post("/api/notes", noteForm);
       const { errorMessage, message, content } = res.data;
-
       // If there is an error
       if (errorMessage) {
         return setAlert({ type: null, message: errorMessage });
       }
-
       // Update the list
-      setNotes([...notes, content]);
+      setNotes([content, ...notes]);
       // Reset the form and set an alert
-      setForm({ title: "", text: "" });
+      setForm({ title: "", text: "", color: "yellow", public: false });
       setAlert({ type: "success", message });
     }
   };
 
-  // *************
   // Handle Delete
   // *************
   const handleDelete = async (id) => {
@@ -91,7 +84,6 @@ function NotesProvider({ children }) {
     }
     const newNotes = notes.filter((note) => note._id !== id);
     setNotes(newNotes);
-    // const res = await Axios.delete(`http://localhost:4000/api/notes/${id}`);
     const res = await Axios.delete(`/api/notes/${id}`);
     setAlert({
       type: null,
@@ -99,9 +91,8 @@ function NotesProvider({ children }) {
     });
   };
 
-  // ********
-  //  Colors
-  // ********
+  // Colors
+  // ******
   const handleChangeNoteColor = () => {
     switch (form.color) {
       case "yellow":
@@ -146,7 +137,6 @@ function NotesProvider({ children }) {
         notes,
         setNotes,
         form,
-        setUserData,
         setForm,
         isEditing,
         setIsEditing,
@@ -156,6 +146,20 @@ function NotesProvider({ children }) {
         pickNoteColor,
         handleDelete,
         handleSubmit,
+        bottomReached,
+        setBottomReached,
+        loading,
+        setLoading,
+        from,
+        setFrom,
+        pBottomReached,
+        setPBottomReached,
+        pLoading,
+        setPLoading,
+        pFrom,
+        setPFrom,
+        publicNotes,
+        setPublicNotes,
       }}
     >
       {children}

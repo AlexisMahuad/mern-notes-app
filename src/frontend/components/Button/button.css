@@ -1,0 +1,29 @@
+.button {
+  height: fit-content;
+  margin-top: 10px;
+  padding: 8px;
+
+  background: #fff;
+  border: none;
+  border-radius: 5px;
+  box-shadow: #00000020 0 3px 0px 0px;
+  color: #000;
+  text-align: center;
+
+  transition: 0.2s;
+}
+.button:hover {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+.button:focus {
+  animation: focus 0.5s linear alternate-reverse;
+}
+@keyframes focus {
+  0% {
+    background: #fff;
+  }
+  100% {
+    background: #eee;
+  }
+}

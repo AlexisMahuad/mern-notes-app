@@ -1,0 +1,125 @@
+.note {
+  width: 90vw;
+  max-width: 300px;
+  margin: 0 auto;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+
+  border-radius: 5px;
+  border-bottom: 3px solid #00000020;
+  border-left: 4px solid #00000050;
+  filter: drop-shadow(#00000025 2px 1px 2px);
+}
+.note * {
+  overflow: visible;
+}
+.note p {
+  padding: 5px 0;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+.note hr {
+  border: none;
+  border-bottom: 1px solid #000;
+}
+.note .username {
+  color: #000000aa;
+  font-weight: 500;
+}
+
+/* Notes Section */
+/* ************* */
+.notes-section {
+  margin-top: 20px;
+  padding: 75px 0;
+  background: #fff;
+}
+
+.notes-section ul {
+  width: fit-content;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 300px;
+  grid-gap: 20px 20px;
+}
+
+.notes-section ul h3 {
+  font-weight: 500;
+  text-align: center;
+}
+
+@media screen and (min-width: 675px) {
+  .notes-section ul {
+    grid-template-columns: 300px 300px;
+  }
+}
+
+@media screen and (min-width: 1050px) {
+  .notes-section ul {
+    grid-template-columns: 300px 300px 300px;
+  }
+}
+
+/* Notes Form */
+/* ********** */
+.notes-form {
+  width: 90vw;
+  overflow: visible;
+}
+.notes-form input,
+.notes-form textarea {
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 1.05rem;
+}
+
+.notes-form input {
+  border-bottom: 2px solid #00000030;
+  border-radius: 2px;
+}
+
+/* Note Footer */
+/* *********** */
+.note-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.note-footer div {
+  height: 50px;
+  margin-top: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+.note-footer button {
+  width: 47.5%;
+  height: fit-content;
+}
+
+/* Notes Info */
+/* ********** */
+.notes-info {
+  margin-bottom: 40px;
+}
+.notes-info li {
+  font-size: 0.9em;
+  margin-bottom: 10px;
+}
+
+/* Notes color */
+/* *********** */
+.n-yellow {
+  background: radial-gradient(#ffffaf, #ffff8f);
+}
+.n-blue {
+  background: radial-gradient(#a8d8ff, #97cefc);
+}
+.n-pink {
+  background: radial-gradient(#ffccff, #ffbbff);
+}
+.n-green {
+  background: radial-gradient(#a2ffa7, #78ff95);
+}

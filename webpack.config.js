@@ -3,8 +3,9 @@ const path = require("path"),
   MiniCSSExtractPlugin = require("mini-css-extract-plugin"),
   { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
+/** @type {import('webpack').Configuration} */
 module.exports = {
-  entry: "./src/frontend/src/index.js",
+  entry: "./src/frontend/index.js",
   output: {
     filename: "bundle.js",
     path: path.join(__dirname, "dist"),
@@ -30,13 +31,7 @@ module.exports = {
       },
       {
         test: /\.css$/i,
-        use: [
-          {
-            loader: MiniCSSExtractPlugin.loader,
-          },
-          "css-loader",
-        ],
-        // use: [MiniCSSExtractPlugin.loader, "css-loader"],
+        use: [MiniCSSExtractPlugin.loader, "css-loader"],
       },
       {
         test: /\.(jpe?g|png|gif|svg|webp)$/i,
@@ -45,9 +40,9 @@ module.exports = {
     ],
   },
   plugins: [
-    new CleanWebpackPlugin(),
+    // new CleanWebpackPlugin(),
     new HTMLWebpackPlugin({
-      template: "./src/frontend/src/index.html",
+      template: "./src/frontend/public/index.html",
       filename: "./index.html",
     }),
     // CSS

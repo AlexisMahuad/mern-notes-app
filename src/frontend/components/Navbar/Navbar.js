@@ -1,13 +1,23 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useUserContext } from "../contexts/userContext";
+import "./navbar.css";
+
+// Contexts
+import { useUserContext } from "../../contexts/userContext";
+import { useNotesContext } from "../../contexts/notesContext";
 
 function Navbar() {
   const { userData, setUserData } = useUserContext();
+  const { setNotes, setBottomReached, setFrom, setLoading } = useNotesContext();
   // Location
   const location = useLocation();
 
   function handleLogout() {
+    setNotes(null);
+    setBottomReached(false);
+    setFrom(0);
+    setLoading(true);
+
     setUserData({
       token: undefined,
       username: undefined,

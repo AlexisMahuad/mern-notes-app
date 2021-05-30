@@ -1,13 +1,14 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 // Components
-import Navbar from "./components/Navbar";
+import Navbar from "./components/Navbar/Navbar";
 // Pages
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Notes from "./pages/Notes";
 import PublicNotes from "./pages/PublicNotes";
+import ValidateMail from "./pages/ValidateMail";
 
 function App() {
   return (
@@ -26,6 +27,9 @@ function App() {
         </Route>
         <Route exact path="/login">
           <Login />
+        </Route>
+        <Route exact path="/pending/:id">
+          <ValidateMail />
         </Route>
         <Route>
           <NotFound />
